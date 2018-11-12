@@ -1,0 +1,7 @@
+node {
+  stage('process with git') {
+    sshagent (credentials: ['github-key']) {
+      sh 'git ls-remote -h --refs git@github.com:keidrun/target_repo.git master |awk "{print $1}"'
+    }
+  }
+}

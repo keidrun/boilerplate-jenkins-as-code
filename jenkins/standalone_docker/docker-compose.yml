@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  jenkins:
+    build: .
+    ports:
+      - 8080:8080
+    volumes:
+      - ./jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+# NOTE: It's mandatory to change a permission of /var/run/docker.socks
+# docker-compose up --build -d
+# docker-compose exec -u root jenkins chmod 666 /var/run/docker.sock

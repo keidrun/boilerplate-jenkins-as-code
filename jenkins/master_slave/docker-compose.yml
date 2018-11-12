@@ -1,0 +1,26 @@
+
+version: "3"
+
+services:
+  master:
+    build: .
+    ports:
+      - 8080:8080
+      - 50000:50000 # For Slave
+    volumes:
+      - ./jenkins_home:/var/jenkins_home
+    links:
+      - slave01
+
+  slave01:
+    image: jenkinsci/ssh-slave
+    environment:
+      - JENKINS_SLAVE_SSH_PUBKEY=ssh-rsa AAAAB3NzaC...
+
+# NOTE: SSH keys
+# Generate SSH key below.
+# docker-compose up --build -d
+# docker-compose exec master ssh-keygen -t rsa -b 4096 -C ""
+# cat jenkins_home/.ssh/id_rsa.pub
+# cat jenkins_home/.ssh/id_rsa
+# Then, public SSH key must be set to JENKINS_SLAVE_SSH_PUBKEY and private SSH key must be set to Jenkins setting by GUI.
