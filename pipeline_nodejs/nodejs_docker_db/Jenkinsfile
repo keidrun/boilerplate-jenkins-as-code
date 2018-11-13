@@ -1,0 +1,36 @@
+node {
+  def commit_id, app
+
+   stage('Prepare commit id') {
+     checkout scm
+     sh "git rev-parse --short HEAD > .git/commit-id"
+     commit_id = readFile('.git/commit-id').trim()
+   }
+
+  stage('Clone repository') {
+    checkout scm
+  }
+
+  stage('Build image') {
+    app = docker.build('keidrun/target_repo')
+  }
+
+  stage('Test with a DB') {
+    def db = docker.image('mongo').run()
+    app.inside("--link ${db.id}:db") { //host: db, port: 27017
+          sh 'npm install --only=dev'
+          sh 'npm test'
+    }
+    db.stop()
+  }
+
+  stage('Push image') {
+    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-credentials') {
+      app.push('latest')
+      app.push("${commit_id}")
+      // app.push("${env.BRANCH_NAME}-latest")
+      // app.push("${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
+      // app.push("${env.BRANCH_NAME}-${commit_id}")
+    }
+  }
+}

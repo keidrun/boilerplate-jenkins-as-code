@@ -1,0 +1,34 @@
+node {
+  def server = Artifactory.server 'myrepo.jfrog.io'
+  def app = docker.image('gradle:jdk8-alpine')
+  app.pull()
+
+  stage('Clone repository') {
+    checkout scm
+  }
+
+  stage('Build') {
+     app.inside("-v ${env.HOME}/.gradle:/home/gradle/.gradle") {
+       sh './gradlew build'
+     }
+  }
+
+  stage('Test') {
+     app.inside("-v ${env.HOME}/.gradle:/home/gradle/.gradle") {
+       sh './gradlew test'
+     }
+  }
+
+  // Publish to JFrog
+  stage('Publish') {
+    def uploadSpec = """{
+      "files": [
+        {
+          "pattern": "build/libs/my-gradle-app-*.jar",
+          "target": "gradle-dev-local/my-repo/my-project/my-gradle-app/1.0/my-gradle-app-1.0-docker.jar"
+        }
+     ]
+    }"""
+    server.upload(uploadSpec)
+  }
+}

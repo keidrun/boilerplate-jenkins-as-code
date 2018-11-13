@@ -1,0 +1,23 @@
+node {
+  try {
+    stage('build') {
+      println('building...')
+    }
+    stage('test') {
+      println('A test failed')
+      sh 'exit 1'
+    }
+  } catch(error) {
+    currentBuild.result = "FAILURE";
+
+    withCredentials([[
+      $class: 'StringBinding',
+      credentialsId: 'slack-webhook-url-credentials',
+      variable: 'SLACK_URL'
+    ]]) {
+        sh "curl -XPOST -d 'payload={ \"color\": \"danger\", \"text\": \":warning: Build failed: $error (see <${env.BUILD_URL}/console|the build logs>)\" }' ${env.SLACK_URL}"
+    }
+
+    throw error;
+  }
+}

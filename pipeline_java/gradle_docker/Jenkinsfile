@@ -1,0 +1,20 @@
+node {
+  def app = docker.image('gradle:jdk8-alpine')
+  app.pull()
+
+  stage('Clone repository') {
+    checkout scm
+  }
+
+  stage('Build') {
+     app.inside("-v ${env.HOME}/.gradle:/home/gradle/.gradle") {
+       sh './gradlew build'
+     }
+  }
+
+  stage('Test') {
+     app.inside("-v ${env.HOME}/.gradle:/home/gradle/.gradle") {
+       sh './gradlew test'
+     }
+  }
+}
